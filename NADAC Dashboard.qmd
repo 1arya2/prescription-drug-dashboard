@@ -1,0 +1,70 @@
+---
+title: "NADAC Prices Dashboard"
+format: 
+    dashboard: 
+      orientation: columns
+      number-sections: false
+---
+
+```{r setup}
+library(tidyverse)
+library(plotly)
+nadac <- read_csv("data/NADAC_Comparison.csv")
+```
+
+## Column {width="60%"}
+
+```{r}
+A <- nadac %>%
+  filter(!is.na(`Effective Date`)) %>% 
+  mutate(`Effective Date` = as.Date(`Effective Date`, format = "%m/%d/%Y")) %>%
+    count(`Effective Date`) %>%
+    ggplot(aes(x = `Effective Date`, y = n)) +
+    geom_col(fill = "skyblue") +
+    labs(
+      title = "Number of Price Changes by Effective Date",
+      x = "Effective Date",
+      y = "Number of Drugs"
+    ) +
+    theme_minimal()
+
+ggplotly(A)
+```
+
+## Column {width="40%"}
+
+```{r}
+reason_counts <- nadac %>% 
+  filter(!is.na(`Primary Reason`)) %>%
+  count(`Primary Reason`) %>%
+  arrange(desc(n))
+
+B <- ggplot(reason_counts, aes(x = reorder(`Primary Reason`, n), y = n)) +
+  geom_col(fill = "skyblue") +
+  coord_flip() +
+  labs(
+    title = "Primary Reasons for Drug Price Changes",
+    x = "Primary Reason for Change",
+    y = "Number of Drugs"
+  ) +
+  theme_minimal()
+
+ggplotly(B)
+```
+
+```{r}
+filtered_nadac <- nadac %>%
+  filter(!is.na(`Percent Change`), !is.na(`Classification for Rate Setting`))
+
+C <- ggplot(filtered_nadac, aes(x = `Classification for Rate Setting`, y = `Percent Change`, fill = `Classification for Rate Setting`)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("B" = "coral", "G" = "skyblue")) +
+  labs(
+    title = "Price Change Distribution: Brand vs. Generic Drugs", 
+    x = "Drug Type",
+    y = "Percent Change"
+  ) +
+  theme_minimal()
+
+ggplotly(C)
+```
